@@ -1,0 +1,57 @@
+{
+  "name": "goboard-sdk",
+  "version": "0.1.0",
+  "description": "Go board core SDK: rules, SGF, Raphael board and players",
+  "type": "module",
+  "main": "./dist/goboard-sdk.cjs",
+  "module": "./dist/goboard-sdk.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/goboard-sdk.js",
+      "require": "./dist/goboard-sdk.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css",
+    "**/*.mp3",
+    "**/*.png"
+  ],
+  "packageManager": "pnpm@11.15.1",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite --config examples/vite.config.ts",
+    "build": "vite build",
+    "build:lib": "pnpm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "go",
+    "baduk",
+    "weiqi",
+    "sgf",
+    "goboard"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "events": "^3.3.0",
+    "raphael": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/raphael": "^2.3.3",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^4.1.10"
+  }
+}

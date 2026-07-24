@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>goboard-sdk examples</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        background: #f3f0e8;
+        color: #1a1a1a;
+      }
+      header {
+        padding: 16px 24px;
+        border-bottom: 1px solid #ddd4c4;
+        background: #fffdf8;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      header p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: #666;
+      }
+      main {
+        display: flex;
+        gap: 24px;
+        padding: 24px;
+        align-items: flex-start;
+      }
+      #board {
+        width: min(90vw, 560px);
+        height: min(90vw, 560px);
+        background: #ecb55a;
+        border-radius: 4px;
+      }
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 180px;
+      }
+      button {
+        padding: 8px 12px;
+        border: 1px solid #c9b89a;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:hover { background: #f7f1e4; }
+      #status {
+        font-size: 13px;
+        color: #444;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>goboard-sdk</h1>
+      <p>本地 examples：点击棋盘落子，用右侧按钮控制。</p>
+    </header>
+    <main>
+      <div id="board"></div>
+      <div class="panel">
+        <button id="btn-back">上一步</button>
+        <button id="btn-forward">下一步</button>
+        <button id="btn-start">到开头</button>
+        <button id="btn-end">到结尾</button>
+        <button id="btn-reset">重置空盘</button>
+        <div id="status"></div>
+      </div>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
