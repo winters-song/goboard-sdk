@@ -1,7 +1,4 @@
-import {
-  GoboardBranchPlayer,
-  SgfTree,
-} from 'goboard-sdk'
+import { GoboardBranchPlayer, SgfTree } from 'goboard-sdk'
 
 const el = document.getElementById('board') as HTMLDivElement
 const statusEl = document.getElementById('status') as HTMLDivElement

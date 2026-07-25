@@ -1,0 +1,11 @@
+dist
+node_modules
+coverage
+pnpm-lock.yaml
+*.mp3
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.woff
+*.woff2
