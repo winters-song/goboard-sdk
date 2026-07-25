@@ -40,9 +40,8 @@
         align-items: flex-start;
       }
       #board {
-        width: min(90vw, 560px);
-        height: min(90vw, 560px);
-        background: #ecb55a;
+        width: min(90vw, 400px);
+        height: min(90vw, 400px);
         border-radius: 4px;
       }
       .panel {
@@ -70,13 +69,13 @@
     </style>
   </head>
   <body>
-    <header>
-      <h1>goboard-sdk</h1>
-      <p>本地 examples：点击棋盘落子，用右侧按钮控制。</p>
-    </header>
     <main>
       <div id="board"></div>
       <div class="panel">
+        <header>
+          <h1>goboard-sdk</h1>
+          <p>本地 examples：点击棋盘落子，用右侧按钮控制。</p>
+        </header>
         <button id="btn-back">上一步</button>
         <button id="btn-forward">下一步</button>
         <button id="btn-start">到开头</button>

@@ -6,7 +6,8 @@ export default defineConfig({
   resolve: {
     alias: {
       // 联调源码时改回：resolve(__dirname, '../src/index.ts')
-      'goboard-sdk': resolve(__dirname, '../dist/goboard-sdk.js'),
+      'goboard-sdk': resolve(__dirname, '../src/index.ts'),
+      // 'goboard-sdk': resolve(__dirname, '../dist/goboard-sdk.js'),
     },
   },
   server: {

@@ -13,6 +13,31 @@ function createPlayer(sgf: string) {
       showCoordinates: true,
       showOrder: true,
       readonly: false,
+      useBoardImg: false,
+      style: {
+        borderColor: '#333',
+        bgColor: '#ffd697',
+      },
+      sizeSettings: {
+        9: {
+          PIECE_RADIUS: 30,
+          UNIT_LENGTH: 65,
+          fontSize: 20,
+          markerSize: 30,
+        },
+        13: {
+          PIECE_RADIUS: 20,
+          UNIT_LENGTH: 46.4,
+          fontSize: 16,
+          markerSize: 26,
+        },
+        19: {
+          PIECE_RADIUS: 15,
+          UNIT_LENGTH: 31,
+          fontSize: 14,
+          markerSize: 22,
+        },
+      },
     },
   })
 
