@@ -20,7 +20,7 @@ interface IUserPlay {
   loop?: boolean
 }
 
-const WebAudioContext = window.AudioContext || window.webkitAudioContext || function () {}
+const WebAudioContext = window.AudioContext || window.webkitAudioContext
 
 export default class Audio {
   static initialized = false
