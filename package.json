@@ -55,7 +55,19 @@
     "sgf",
     "goboard"
   ],
+  "author": "winters-song",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/winters-song/goboard-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/winters-song/goboard-sdk/issues"
+  },
+  "homepage": "https://github.com/winters-song/goboard-sdk#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "events": "^3.3.0",
     "raphael": "^2.3.0"
