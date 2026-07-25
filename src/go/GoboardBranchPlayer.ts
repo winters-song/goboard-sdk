@@ -69,7 +69,7 @@ export default class GoboardBranchPlayer extends GoboardPlayer {
   }
 
   // 进入试下
-  enterUserBranch(col, row, color) {
+  enterUserBranch() {
     //改变棋盘状态
     this.inBranch = true
 
@@ -116,7 +116,7 @@ export default class GoboardBranchPlayer extends GoboardPlayer {
     }
   }
 
-  backward(silent) {
+  backward(silent?: boolean) {
     if (this.currentStep <= 0) {
       return false
     }

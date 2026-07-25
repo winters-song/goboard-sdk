@@ -370,6 +370,7 @@ export class Go {
         if (oldBoard[i][j] !== this.board[i][j]) {
           //exclude current move
           if (i === moveResult.move[1] && j === moveResult.move[0]) {
+            // 当前落子，不加入被吃掉的子
           } else {
             eaten.add({
               row: i,
@@ -571,7 +572,3 @@ export class Go {
     return i
   }
 }
-
-// exports.Str = Str
-// exports.Color = Color
-// exports.Go = Go
