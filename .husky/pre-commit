@@ -1,11 +1,1 @@
-#!/usr/bin/env sh
-# Node版本仓库目录必须是 HOME/.nvm
-export NVM_DIR="$HOME/.nvm"
-# brew安装的nvm，脚本文件在下面路径
-NVM_SOURCE="/usr/local/opt/nvm/nvm.sh"
-[ -s "$NVM_SOURCE" ] && \. "$NVM_SOURCE"
-
-
-echo "🚀 开始执行 lint-staged"
-
 pnpm lint-staged
