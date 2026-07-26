@@ -29,6 +29,7 @@ import type {
   PieceMap,
   PlayCallback,
   RaphaelNodeMap,
+  BoardTextMap,
   ShowOrderMode,
   StoneColor,
   StoneColorMap,
@@ -87,7 +88,7 @@ class Goboard {
   pieces: PieceMap = {}
   orders: RaphaelNodeMap = {}
   branchOrders: RaphaelNodeMap = {}
-  coordinates: RaphaelNodeMap = {}
+  coordinates: BoardTextMap = {}
   places: RaphaelNodeMap = {}
   markers: RaphaelNodeMap = {}
   branchMarkers: RaphaelNodeMap = {}
@@ -155,7 +156,7 @@ class Goboard {
     this.initParams()
     this.initChessBoard()
     this.initPieces()
-    this.initCoordinates()
+    this.scheduleInitCoordinates()
 
     if (this.options.showHelperLines) {
       this.createHelperLines()
@@ -199,6 +200,14 @@ class Goboard {
   /** 坐标省略 I（易歧义），纵坐标从下至上 */
   initCoordinates() {
     return this.renderer.initCoordinates()
+  }
+
+  scheduleInitCoordinates() {
+    return this.renderer.scheduleInitCoordinates()
+  }
+
+  cancelScheduledCoordinates() {
+    return this.renderer.cancelScheduledCoordinates()
   }
 
   createHelperLines() {
@@ -569,6 +578,7 @@ class Goboard {
   }
 
   destroy() {
+    this.cancelScheduledCoordinates()
     this.interaction.destroyEvents()
 
     if (this.paper) {

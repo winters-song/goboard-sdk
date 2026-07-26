@@ -87,6 +87,17 @@ export type GoboardConfig = Partial<Omit<GoboardOptions, 'style' | 'sizeSettings
 export type RaphaelNodeMap = Record<string, RaphaelElement>
 export type PieceMap = Record<string, RaphaelElement | RaphaelSet>
 
+/** 轻量 SVG 文本节点（坐标等），避免 Raphael text 的 getBBox Forced reflow */
+export interface BoardTextElement {
+  node: SVGTextElement
+  show(): BoardTextElement
+  hide(): BoardTextElement
+  attr(name: string, value: string | number): BoardTextElement
+  remove(): void
+}
+
+export type BoardTextMap = Record<string, BoardTextElement>
+
 export interface BoardPoint {
   col: number
   row: number

@@ -1,6 +1,14 @@
 import Raphael, { type RaphaelAttributes, RaphaelElement, RaphaelPaper, RaphaelSet } from 'raphael'
 import { HOSHI } from './constants'
-import type { GoboardOptions, HelperLineCallback, RaphaelNodeMap, TextAttrs } from './types'
+import type {
+  BoardTextElement,
+  BoardTextMap,
+  GoboardOptions,
+  HelperLineCallback,
+  TextAttrs,
+} from './types'
+
+const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /** 棋盘渲染层所需的棋盘宿主最小接口 */
 export interface BoardRendererHost {
@@ -9,7 +17,7 @@ export interface BoardRendererHost {
   paper?: RaphaelPaper
   drawCache?: RaphaelSet
   boardMesh?: RaphaelElement
-  coordinates: RaphaelNodeMap
+  coordinates: BoardTextMap
   blackImg: string
   whiteImg: string
   width: number
@@ -41,6 +49,9 @@ export interface BoardRendererHost {
 }
 
 export class BoardRenderer {
+  /** 递增以取消尚未执行的延迟坐标初始化 */
+  private coordinatesDeferToken = 0
+
   constructor(private readonly board: BoardRendererHost) {}
 
   initPaper() {
@@ -231,12 +242,12 @@ export class BoardRenderer {
   }
 
   /**
-   *  坐标省略I(容易歧义), 纵坐标从下至上。
-   *  仅在 showCoordinates 时创建节点，避免首屏无意义的 ~76 个 SVG text。
+   * 坐标省略 I（易歧义），纵坐标从下至上。
+   * 仅在 showCoordinates 时创建；首屏用 scheduleInitCoordinates 延后到首帧绘制之后。
    */
   initCoordinates() {
     const b = this.board
-    if (!b.options.showCoordinates) {
+    if (!b.options.showCoordinates || !b.paper) {
       return
     }
     if (Object.keys(b.coordinates).length > 0) {
@@ -252,7 +263,6 @@ export class BoardRenderer {
       alpha = 'ABCDEFGHJKLMNOPQRST'
     }
 
-    //坐标文本上下左右基线坐标
     // 坐标到棋盘距离
     const distance = b.options.coordinateDistance
     const colYT = b.centerY - b.options.BOARD_WIDTH / 2 - distance
@@ -267,30 +277,70 @@ export class BoardRenderer {
       fill: b.options.coordinateColor,
     }
 
-    let text
+    // 批量挂到 fragment，减少多次 append 触发的中间布局
+    const fragment = document.createDocumentFragment()
+    const pending: Array<{ key: string; el: BoardTextElement; className: string }> = []
 
     for (let i = 0; i < b.options.boardSize; i++) {
       const x = (i - Math.floor(b.options.boardSize / 2)) * b.options.UNIT_LENGTH + b.centerX
 
-      text = this.createText(x, colYT, alpha[i], cfg)
-      b.coordinates['ct' + i] = text
-
-      text.node.setAttribute('class', 'coordinate-text top')
-
-      text = this.createText(x, colYB, alpha[i], cfg)
-      b.coordinates['cb' + i] = text
-      text.node.setAttribute('class', 'coordinate-text bottom')
+      pending.push({
+        key: 'ct' + i,
+        el: this.createCoordinateText(x, colYT, alpha[i], cfg, fragment),
+        className: 'coordinate-text top',
+      })
+      pending.push({
+        key: 'cb' + i,
+        el: this.createCoordinateText(x, colYB, alpha[i], cfg, fragment),
+        className: 'coordinate-text bottom',
+      })
 
       const y = (i - Math.floor(b.options.boardSize / 2)) * b.options.UNIT_LENGTH + b.centerY
 
-      text = this.createText(colXL, y, (b.options.boardSize - i).toString(), cfg)
-      b.coordinates['rl' + i] = text
-      text.node.setAttribute('class', 'coordinate-text left')
-
-      text = this.createText(colXR, y, (b.options.boardSize - i).toString(), cfg)
-      b.coordinates['rr' + i] = text
-      text.node.setAttribute('class', 'coordinate-text right')
+      pending.push({
+        key: 'rl' + i,
+        el: this.createCoordinateText(colXL, y, String(b.options.boardSize - i), cfg, fragment),
+        className: 'coordinate-text left',
+      })
+      pending.push({
+        key: 'rr' + i,
+        el: this.createCoordinateText(colXR, y, String(b.options.boardSize - i), cfg, fragment),
+        className: 'coordinate-text right',
+      })
     }
+
+    b.paper.canvas.appendChild(fragment)
+    for (const item of pending) {
+      item.el.node.setAttribute('class', item.className)
+      b.coordinates[item.key] = item.el
+    }
+  }
+
+  /**
+   * 首屏棋盘/棋子优先；坐标非关键路径，双 rAF 等到浏览器完成首帧绘制后再创建。
+   */
+  scheduleInitCoordinates() {
+    const b = this.board
+    if (!b.options.showCoordinates) {
+      return
+    }
+    if (Object.keys(b.coordinates).length > 0) {
+      return
+    }
+
+    const token = ++this.coordinatesDeferToken
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (token !== this.coordinatesDeferToken) {
+          return
+        }
+        this.initCoordinates()
+      })
+    })
+  }
+
+  cancelScheduledCoordinates() {
+    this.coordinatesDeferToken++
   }
 
   /** 创建辅助线 */
@@ -388,6 +438,58 @@ export class BoardRenderer {
     }
   }
 
+  /**
+   * 原生 SVG text：用 text-anchor + dominant-baseline 居中，避免 Raphael tuneText 的 getBBox。
+   */
+  createCoordinateText(
+    x: number,
+    y: number,
+    text: string,
+    cfg: TextAttrs,
+    parent: Node = this.board.paper!.canvas,
+  ): BoardTextElement {
+    const el = document.createElementNS(SVG_NS, 'text')
+    el.setAttribute('x', String(x))
+    el.setAttribute('y', String(y))
+    el.setAttribute('text-anchor', 'middle')
+    el.setAttribute('dominant-baseline', 'central')
+    if (cfg['font-size'] != null) {
+      el.setAttribute('font-size', String(cfg['font-size']))
+    }
+    if (cfg['font-weight'] != null) {
+      el.setAttribute('font-weight', String(cfg['font-weight']))
+    }
+    if (cfg['font-family'] != null) {
+      el.setAttribute('font-family', String(cfg['font-family']))
+    }
+    if (cfg.fill != null) {
+      el.setAttribute('fill', String(cfg.fill))
+    }
+    el.style.pointerEvents = 'none'
+    el.textContent = text
+    parent.appendChild(el)
+
+    const api: BoardTextElement = {
+      node: el,
+      show() {
+        el.style.display = ''
+        return api
+      },
+      hide() {
+        el.style.display = 'none'
+        return api
+      },
+      attr(name: string, value: string | number) {
+        el.setAttribute(name, String(value))
+        return api
+      },
+      remove() {
+        el.remove()
+      },
+    }
+    return api
+  }
+
   createText(x: number, y: number, text: string, cfg: TextAttrs) {
     const b = this.board
     const node = b.paper?.text(x, y, text).attr(cfg as Partial<RaphaelAttributes>)
@@ -400,15 +502,15 @@ export class BoardRenderer {
 
   setCoordinateColor(color: number) {
     const b = this.board
-    for (let i = 0; i < b.options.boardSize; i++) {
-      b.coordinates['c' + i].attr('fill', color.toString())
-      b.coordinates['r' + i].attr('fill', color.toString())
+    for (const k in b.coordinates) {
+      b.coordinates[k].attr('fill', color.toString())
     }
   }
 
   showCoordinates() {
     const b = this.board
     b.options.showCoordinates = true
+    this.cancelScheduledCoordinates()
     if (Object.keys(b.coordinates).length === 0) {
       this.initCoordinates()
     }
