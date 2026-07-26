@@ -1,5 +1,4 @@
-import GoboardPlayer from './GoboardPlayer'
-import Audio from '../Audio/Audio'
+import GoboardPlayer, { playBoardSound } from './GoboardPlayer'
 
 /*
  *
@@ -21,7 +20,7 @@ export default class GoboardGamePlayer extends GoboardPlayer {
 
       if (!silent && this.soundEnabled) {
         const rand = Math.round(1e4 * Math.random()) % 5
-        Audio.playEffect(`stone${rand + 1}`)
+        playBoardSound(`stone${rand + 1}`)
       }
 
       if (eaten.size) {
@@ -38,11 +37,7 @@ export default class GoboardGamePlayer extends GoboardPlayer {
         this.cb.eat(captures)
 
         if (this.soundEnabled) {
-          if (eaten.size <= 2) {
-            Audio.playEffect('eat1')
-          } else {
-            Audio.playEffect('eat2')
-          }
+          playBoardSound(eaten.size <= 2 ? 'eat1' : 'eat2')
         }
 
         // if(node.color === Color.BLACK){

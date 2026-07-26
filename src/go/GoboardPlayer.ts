@@ -3,29 +3,25 @@ import { Go, Color } from './Go'
 import { SgfMoveNode, SgfNode, SgfTree } from './SgfTree'
 import EventEmitter from 'events'
 import Audio from '../Audio/Audio'
-import playForbidden from '../assets/sound/playForbidden.mp3'
-import stone1 from '../assets/sound/stone1.mp3'
-import stone2 from '../assets/sound/stone2.mp3'
-import stone3 from '../assets/sound/stone3.mp3'
-import stone4 from '../assets/sound/stone4.mp3'
-import stone5 from '../assets/sound/stone5.mp3'
-import eat1 from '../assets/sound/eat1.mp3'
-import eat2 from '../assets/sound/eat2.mp3'
 
-// 音效
-const map = new Map<string, string>([
-  ['playForbidden', playForbidden],
-  ['stone1', stone1],
-  ['stone2', stone2],
-  ['stone3', stone3],
-  ['stone4', stone4],
-  ['stone5', stone5],
-  ['eat1', eat1],
-  ['eat2', eat2],
-])
+let effectsReady: Promise<void> | null = null
 
-Audio.init()
-Audio.loadEffects(map)
+function ensureEffects() {
+  if (!effectsReady) {
+    effectsReady = import('./boardSounds').then(({ SOUND_URLS }) => {
+      Audio.init()
+      Audio.loadEffects(SOUND_URLS)
+    })
+  }
+  return effectsReady
+}
+
+/** 首次播放时再加载音效；未解码完则排队等加载后播放 */
+export function playBoardSound(name: string, volume = 0.2) {
+  void ensureEffects().then(() => {
+    Audio.playAsnyc({ name, volume })
+  })
+}
 
 /*
  *
@@ -195,7 +191,7 @@ export default class GoboardPlayer extends EventEmitter {
 
     const { node, col, row, color } = this.prePlayData
     if (!this.go.canPlay(col, row, color)) {
-      Audio.play('playForbidden')
+      playBoardSound('playForbidden', 0.5)
       return
     }
     // 真正落子后，隐藏候选落子
@@ -231,7 +227,7 @@ export default class GoboardPlayer extends EventEmitter {
 
       if (!silent && this.soundEnabled) {
         const rand = Math.round(1e4 * Math.random()) % 5
-        Audio.playEffect(`stone${rand + 1}`)
+        playBoardSound(`stone${rand + 1}`)
       }
 
       if (eaten.size) {
@@ -248,11 +244,7 @@ export default class GoboardPlayer extends EventEmitter {
         this.cb.eat(capures)
 
         if (this.soundEnabled) {
-          if (eaten.size <= 2) {
-            Audio.playEffect('eat1')
-          } else {
-            Audio.playEffect('eat2')
-          }
+          playBoardSound(eaten.size <= 2 ? 'eat1' : 'eat2')
         }
       }
     }

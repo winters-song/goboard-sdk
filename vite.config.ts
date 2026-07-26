@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'node:path'
 import dts from 'vite-plugin-dts'
+import { emitLibAssets } from './scripts/emitLibAssets'
 
 export default defineConfig({
   test: {
@@ -9,6 +10,7 @@ export default defineConfig({
     environment: 'node',
   },
   plugins: [
+    emitLibAssets(),
     dts({
       include: ['src'],
       outDir: 'dist',

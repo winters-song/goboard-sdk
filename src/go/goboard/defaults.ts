@@ -28,7 +28,7 @@ export const DEFAULT_OPTIONS: GoboardOptions = {
   position: 'c',
 
   boardImg: '',
-  useBoardImg: true,
+  useBoardImg: false,
   svgBoardImg: '',
   style: {
     borderColor: '#C6732F',

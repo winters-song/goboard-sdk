@@ -231,10 +231,18 @@ export class BoardRenderer {
   }
 
   /**
-   *  坐标省略I(容易歧义), 纵坐标从下至上
+   *  坐标省略I(容易歧义), 纵坐标从下至上。
+   *  仅在 showCoordinates 时创建节点，避免首屏无意义的 ~76 个 SVG text。
    */
   initCoordinates() {
     const b = this.board
+    if (!b.options.showCoordinates) {
+      return
+    }
+    if (Object.keys(b.coordinates).length > 0) {
+      return
+    }
+
     let alpha
     if (b.options.boardSize === 9) {
       alpha = 'ABCDEFGHJ'
@@ -401,6 +409,9 @@ export class BoardRenderer {
   showCoordinates() {
     const b = this.board
     b.options.showCoordinates = true
+    if (Object.keys(b.coordinates).length === 0) {
+      this.initCoordinates()
+    }
     for (const k in b.coordinates) {
       b.coordinates[k].show()
     }

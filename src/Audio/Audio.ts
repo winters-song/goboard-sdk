@@ -37,13 +37,21 @@ export default class Audio {
 
   static emitter = new EventEmitter()
 
-  private static context = new WebAudioContext()
+  private static context: AudioContext | null = null
+
+  private static getContext() {
+    if (!this.context) {
+      this.context = new WebAudioContext()
+    }
+    return this.context
+  }
 
   static init() {
     if (this.initialized) {
       return
     }
 
+    this.getContext()
     this.unlock()
 
     this.initialized = true
@@ -51,8 +59,9 @@ export default class Audio {
 
   static unlock() {
     const unlockWebAudio = () => {
-      if (this.context.state !== 'running') {
-        this.context.resume()
+      const ctx = this.getContext()
+      if (ctx.state !== 'running') {
+        ctx.resume()
       }
       document.body.removeEventListener('click', unlockWebAudio, true)
     }
@@ -62,10 +71,10 @@ export default class Audio {
   }
 
   // 加载播放列表
-  static loadEffects(map: Map<string, string>) {
-    map.forEach((value, key) => {
-      this.loadEffect(key, value)
-    })
+  static loadEffects(effects: Record<string, string>) {
+    for (const [key, path] of Object.entries(effects)) {
+      this.loadEffect(key, path)
+    }
   }
 
   static async loadEffect(key: string, path: string) {
@@ -78,7 +87,7 @@ export default class Audio {
     const effectRes = await fetch(path)
     const effectBuffer = await effectRes.arrayBuffer()
 
-    this.context.decodeAudioData(
+    this.getContext().decodeAudioData(
       effectBuffer,
       (data) => {
         this.audiosLoading.delete(key)
@@ -150,6 +159,7 @@ export default class Audio {
     loop = false,
     override = true,
   }: IPlay) {
+    const ctx = this.getContext()
     if (override && this.audiosPlaying.has(name)) {
       const sourceNode = this.audiosPlaying.get(name)
       if (sourceNode) {
@@ -157,13 +167,13 @@ export default class Audio {
       }
     }
     // 调整播放音量
-    const gainNode = this.context.createGain()
+    const gainNode = ctx.createGain()
     // 默认为 1/2 的音量
-    gainNode.gain.setValueAtTime(volume || 0.5, this.context.currentTime)
-    gainNode.connect(this.context.destination)
+    gainNode.gain.setValueAtTime(volume || 0.5, ctx.currentTime)
+    gainNode.connect(ctx.destination)
 
     // this.gainNode.gain.setValueAtTime(volume || 0.5, this.context.currentTime);
-    const sourceNode = this.context.createBufferSource()
+    const sourceNode = ctx.createBufferSource()
     sourceNode.buffer = buffer
     sourceNode.loop = loop || false
     sourceNode.connect(gainNode)
