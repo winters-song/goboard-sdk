@@ -51,6 +51,8 @@ export interface BoardRendererHost {
 export class BoardRenderer {
   /** 递增以取消尚未执行的延迟坐标初始化 */
   private coordinatesDeferToken = 0
+  /** 坐标文本共用样式容器（SVG 继承 font/fill） */
+  private coordinatesGroup?: SVGGElement
 
   constructor(private readonly board: BoardRendererHost) {}
 
@@ -175,46 +177,55 @@ export class BoardRenderer {
         b.drawCache?.push(b.boardMesh)
       }
 
-      // 1线
+      // 1 线边框 + 交叉线/星位合并为少量 path，避免 O(n) 个 SVG 节点
+      const stroke = lineColor || borderColor
       const x0 = b.originX + b.offsetX
       const y0 = b.originY + b.offsetY
-      const innerWidth = b.options.UNIT_LENGTH * (b.options.boardSize - 1)
+      const unit = b.options.UNIT_LENGTH
+      const size = b.options.boardSize
+      const innerWidth = unit * (size - 1)
+      const x1 = x0 + innerWidth
+      const y1 = y0 + innerWidth
+
       const border = b.paper.rect(x0, y0, innerWidth, innerWidth).attr({
-        stroke: lineColor || borderColor,
+        stroke,
         'stroke-width': outerLineWidth,
         fill: kid ? bgColor : 'none',
       })
-
       if (border) {
         b.drawCache?.push(border)
       }
 
-      for (let i = 1; i < b.options.boardSize - 1; i++) {
-        const pos = this.getHelperLinePos(i, i)
-        const lineX = b.paper.path(pos[0]).attr({
-          stroke: lineColor || borderColor,
+      let gridD = ''
+      for (let i = 1; i < size - 1; i++) {
+        const x = i * unit + x0
+        const y = i * unit + y0
+        gridD += `M${x} ${y0}L${x} ${y1}M${x0} ${y}L${x1} ${y}`
+      }
+      if (gridD) {
+        const grid = b.paper.path(gridD).attr({
+          stroke,
           'stroke-width': lineWidth,
+          fill: 'none',
         })
-        const lineY = b.paper.path(pos[1]).attr({
-          stroke: lineColor || borderColor,
-          'stroke-width': lineWidth,
-        })
-        b.drawCache?.push(lineX)
-        b.drawCache?.push(lineY)
+        b.drawCache?.push(grid)
       }
 
-      // 星位
-      const hoshi = HOSHI[b.options.boardSize]
-      if (hoshi) {
+      const hoshi = HOSHI[size]
+      if (hoshi?.length) {
+        const r = 5
+        let hoshiD = ''
         for (let i = 0; i < hoshi.length; i++) {
-          const hx = hoshi[i][0] * b.options.UNIT_LENGTH + b.offsetX + b.originX
-          const hy = hoshi[i][1] * b.options.UNIT_LENGTH + b.offsetY + b.originY
-          const dot = b.paper.circle(hx, hy, 5).attr({
-            fill: lineColor || borderColor,
-            'stroke-width': 0,
-          })
-          b.drawCache.push(dot)
+          const hx = hoshi[i][0] * unit + x0
+          const hy = hoshi[i][1] * unit + y0
+          // 两段圆弧拼成实心圆
+          hoshiD += `M${hx - r},${hy}a${r},${r} 0 1,0 ${r * 2},0a${r},${r} 0 1,0 ${-r * 2},0`
         }
+        const dots = b.paper.path(hoshiD).attr({
+          fill: stroke,
+          stroke: 'none',
+        })
+        b.drawCache?.push(dots)
       }
 
       b.drawCache.toBack()
@@ -270,50 +281,55 @@ export class BoardRenderer {
     const colXL = b.centerX - b.options.BOARD_WIDTH / 2 - distance
     const colXR = b.centerX + b.options.BOARD_WIDTH / 2 + distance
 
-    const cfg = {
-      'font-size': b.options.fontSize,
-      'font-weight': 400,
-      'font-family': 'Arial',
-      fill: b.options.coordinateColor,
-    }
-
-    // 批量挂到 fragment，减少多次 append 触发的中间布局
-    const fragment = document.createDocumentFragment()
-    const pending: Array<{ key: string; el: BoardTextElement; className: string }> = []
+    // 共用样式放在 <g> 上，子 text 继承，避免每个节点重复设 font/fill
+    const group = document.createElementNS(SVG_NS, 'g')
+    group.setAttribute('class', 'coordinate-labels')
+    group.setAttribute('font-size', String(b.options.fontSize))
+    group.setAttribute('font-weight', '400')
+    group.setAttribute('font-family', 'Arial')
+    group.setAttribute('fill', b.options.coordinateColor)
+    group.setAttribute('text-anchor', 'middle')
+    group.setAttribute('dominant-baseline', 'central')
+    group.style.pointerEvents = 'none'
+    this.coordinatesGroup = group
 
     for (let i = 0; i < b.options.boardSize; i++) {
       const x = (i - Math.floor(b.options.boardSize / 2)) * b.options.UNIT_LENGTH + b.centerX
 
-      pending.push({
-        key: 'ct' + i,
-        el: this.createCoordinateText(x, colYT, alpha[i], cfg, fragment),
-        className: 'coordinate-text top',
-      })
-      pending.push({
-        key: 'cb' + i,
-        el: this.createCoordinateText(x, colYB, alpha[i], cfg, fragment),
-        className: 'coordinate-text bottom',
-      })
+      b.coordinates['ct' + i] = this.createCoordinateText(
+        x,
+        colYT,
+        alpha[i],
+        'coordinate-text top',
+        group,
+      )
+      b.coordinates['cb' + i] = this.createCoordinateText(
+        x,
+        colYB,
+        alpha[i],
+        'coordinate-text bottom',
+        group,
+      )
 
       const y = (i - Math.floor(b.options.boardSize / 2)) * b.options.UNIT_LENGTH + b.centerY
 
-      pending.push({
-        key: 'rl' + i,
-        el: this.createCoordinateText(colXL, y, String(b.options.boardSize - i), cfg, fragment),
-        className: 'coordinate-text left',
-      })
-      pending.push({
-        key: 'rr' + i,
-        el: this.createCoordinateText(colXR, y, String(b.options.boardSize - i), cfg, fragment),
-        className: 'coordinate-text right',
-      })
+      b.coordinates['rl' + i] = this.createCoordinateText(
+        colXL,
+        y,
+        String(b.options.boardSize - i),
+        'coordinate-text left',
+        group,
+      )
+      b.coordinates['rr' + i] = this.createCoordinateText(
+        colXR,
+        y,
+        String(b.options.boardSize - i),
+        'coordinate-text right',
+        group,
+      )
     }
 
-    b.paper.canvas.appendChild(fragment)
-    for (const item of pending) {
-      item.el.node.setAttribute('class', item.className)
-      b.coordinates[item.key] = item.el
-    }
+    b.paper.canvas.appendChild(group)
   }
 
   /**
@@ -341,6 +357,10 @@ export class BoardRenderer {
 
   cancelScheduledCoordinates() {
     this.coordinatesDeferToken++
+  }
+
+  clearCoordinatesGroup() {
+    this.coordinatesGroup = undefined
   }
 
   /** 创建辅助线 */
@@ -439,33 +459,19 @@ export class BoardRenderer {
   }
 
   /**
-   * 原生 SVG text：用 text-anchor + dominant-baseline 居中，避免 Raphael tuneText 的 getBBox。
+   * 原生 SVG text：位置/文案写在节点上，font/fill 由父 <g> 继承。
    */
   createCoordinateText(
     x: number,
     y: number,
     text: string,
-    cfg: TextAttrs,
+    className: string,
     parent: Node = this.board.paper!.canvas,
   ): BoardTextElement {
     const el = document.createElementNS(SVG_NS, 'text')
     el.setAttribute('x', String(x))
     el.setAttribute('y', String(y))
-    el.setAttribute('text-anchor', 'middle')
-    el.setAttribute('dominant-baseline', 'central')
-    if (cfg['font-size'] != null) {
-      el.setAttribute('font-size', String(cfg['font-size']))
-    }
-    if (cfg['font-weight'] != null) {
-      el.setAttribute('font-weight', String(cfg['font-weight']))
-    }
-    if (cfg['font-family'] != null) {
-      el.setAttribute('font-family', String(cfg['font-family']))
-    }
-    if (cfg.fill != null) {
-      el.setAttribute('fill', String(cfg.fill))
-    }
-    el.style.pointerEvents = 'none'
+    el.setAttribute('class', className)
     el.textContent = text
     parent.appendChild(el)
 
@@ -500,10 +506,15 @@ export class BoardRenderer {
     return node
   }
 
-  setCoordinateColor(color: number) {
+  setCoordinateColor(color: number | string) {
+    const fill = String(color)
+    if (this.coordinatesGroup) {
+      this.coordinatesGroup.setAttribute('fill', fill)
+      return
+    }
     const b = this.board
     for (const k in b.coordinates) {
-      b.coordinates[k].attr('fill', color.toString())
+      b.coordinates[k].attr('fill', fill)
     }
   }
 
@@ -514,16 +525,16 @@ export class BoardRenderer {
     if (Object.keys(b.coordinates).length === 0) {
       this.initCoordinates()
     }
-    for (const k in b.coordinates) {
-      b.coordinates[k].show()
+    if (this.coordinatesGroup) {
+      this.coordinatesGroup.style.display = ''
     }
   }
 
   hideCoordinates() {
     const b = this.board
     b.options.showCoordinates = false
-    for (const k in b.coordinates) {
-      b.coordinates[k].hide()
+    if (this.coordinatesGroup) {
+      this.coordinatesGroup.style.display = 'none'
     }
   }
 

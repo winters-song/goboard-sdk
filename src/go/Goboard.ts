@@ -579,6 +579,7 @@ class Goboard {
 
   destroy() {
     this.cancelScheduledCoordinates()
+    this.renderer.clearCoordinatesGroup()
     this.interaction.destroyEvents()
 
     if (this.paper) {
