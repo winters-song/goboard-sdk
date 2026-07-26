@@ -171,7 +171,8 @@ export default class GoboardPlayer extends EventEmitter {
     }
 
     const current = cb.markers[key]
-    if (current >= 'A' && current <= 'Z') {
+    const currentText = current ? String(current.attr('text') ?? '') : ''
+    if (currentText >= 'A' && currentText <= 'Z') {
       cb.removeMarker(col, row)
       cb.getNextMarker()
       cb.updateMarkerDummy(cb.currentMarker)
@@ -742,7 +743,7 @@ export default class GoboardPlayer extends EventEmitter {
     let markerString = ''
     for (const i in this.cb.markers) {
       const pos = i.split(',')
-      markerString += `[${SgfTree.toGnuCo(parseInt(pos[0]), parseInt(pos[1]))}:${this.cb.markers[i].attrs.text}]`
+      markerString += `[${SgfTree.toGnuCo(parseInt(pos[0]), parseInt(pos[1]))}:${this.cb.markers[i].attr('text')}]`
     }
     if (markerString) {
       traceSgf += 'LB' + markerString

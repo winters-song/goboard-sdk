@@ -598,7 +598,7 @@ export default class GoboardAnalysisPlayer extends GoboardPlayer {
       stone.attr({
         opacity: 1 - i * 0.15,
       })
-      this.cb.pieces[key].attr('cursor', 'pointer')
+      this.cb.pieces[key].attr({ cursor: 'pointer' })
 
       const [x, y] = this.cb?.go2ph(col, row) || [0, 0]
       this.suggestOrderList[i] = this.cb?.addText(x, y, i + 1, {
@@ -606,9 +606,10 @@ export default class GoboardAnalysisPlayer extends GoboardPlayer {
       })
 
       // 为moves的每一个棋子实例添加一次性点击事件，点击后打印该棋子的坐标
-      const handleClick = (e: any) => {
+      const handleClick = (_e: unknown) => {
         console.log('index', index)
         // console.log('棋子坐标:', col, row);
+        // @ts-expect-error raphael runtime unclick API
         this.cb?.pieces[key].unclick?.()
         this.enterAnalysisBranch(index)
       }
@@ -760,6 +761,7 @@ export default class GoboardAnalysisPlayer extends GoboardPlayer {
 
         if (this.isBestMove) {
           // 移除点击事件
+          // @ts-expect-error raphael runtime unclick API
           this.cb.pieces[this.lastMasterKey]?.unclick()
         }
         this.lastMasterKey = ''

@@ -2,6 +2,16 @@ export { Go, Color, Str, mergeSet, removeSet } from './go/Go'
 export { SgfTree, SgfNode, SgfMoveNode, SgfProperty, AutoPlayStatus } from './go/SgfTree'
 export type { AutoPlayResult, AutoPlayStatusCode } from './go/SgfTree'
 export { default as Goboard } from './go/Goboard'
+export type {
+  BoardPoint,
+  BoardStyle,
+  GoboardConfig,
+  GoboardOptions,
+  ShowOrderMode,
+  SizeSetting,
+  StoneColor,
+  TerritoryGroup,
+} from './go/goboard/types'
 export { default as GoboardPlayer } from './go/GoboardPlayer'
 export { default as GoboardPlayerTiny } from './go/GoboardPlayerTiny'
 export { default as GoboardGamePlayer } from './go/GoboardGamePlayer'
