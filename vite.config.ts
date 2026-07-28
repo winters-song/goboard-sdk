@@ -25,10 +25,13 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: {
+        'goboard-sdk': resolve(__dirname, 'src/index.ts'),
+        core: resolve(__dirname, 'src/core.ts'),
+      },
       name: 'GoboardSdk',
       formats: ['es', 'cjs'],
-      fileName: (format) => (format === 'es' ? 'goboard-sdk.js' : 'goboard-sdk.cjs'),
+      fileName: (format, entryName) => (format === 'es' ? `${entryName}.js` : `${entryName}.cjs`),
     },
     rollupOptions: {
       external: ['raphael', 'events'],

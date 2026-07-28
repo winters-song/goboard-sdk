@@ -51,6 +51,12 @@ player.init({ sgfTree, whoFirst: 1, boardSize: 19 }, { showCoordinates: true })
 - `Goboard` — 棋盘绘制
 - `GoboardPlayer` 及 `*Player` — 业务控制层
 
+无 DOM / Raphael 的纯逻辑可从子路径引入（适合 3D 等非 SVG 视图）：
+
+```ts
+import { Go, Color, SgfTree, SgfMoveNode } from 'goboard-sdk/core'
+```
+
 ## 目录
 
 ```

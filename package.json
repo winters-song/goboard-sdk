@@ -1,16 +1,21 @@
 {
   "name": "goboard-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Go board core SDK: rules, SGF, Raphael board and players",
   "type": "module",
   "main": "./dist/goboard-sdk.cjs",
   "module": "./dist/goboard-sdk.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/goboard-sdk.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/goboard-sdk.d.ts",
       "import": "./dist/goboard-sdk.js",
       "require": "./dist/goboard-sdk.cjs"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js",
+      "require": "./dist/core.cjs"
     }
   },
   "files": [
