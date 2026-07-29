@@ -2,9 +2,7 @@ export const BoardEvents = [
   { key: 'mousedown', name: 'onMouseDown', handler: 'mouseDownHandler' },
   { key: 'mouseup', name: 'onMouseUp', handler: 'mouseUpHandler' },
   { key: 'mousemove', name: 'onMouseMove', handler: 'mouseMoveHandler' },
-  { key: 'touchstart', name: 'onTouchStart', handler: 'touchStartHandler' },
   { key: 'touchend', name: 'onTouchEnd', handler: 'touchEndHandler' },
-  { key: 'touchmove', name: 'onTouchMove', handler: 'touchMoveHandler' },
 ]
 
 export const STATES = {

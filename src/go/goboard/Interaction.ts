@@ -57,9 +57,7 @@ export interface InteractionHost {
   onMouseDown(e: BoardPointerEvent): void
   onMouseUp(e: BoardPointerEvent): void
   onMouseMove(e: BoardPointerEvent): void
-  onTouchStart(e: BoardPointerEvent): void
   onTouchEnd(e: BoardPointerEvent): void
-  onTouchMove(e: BoardPointerEvent): void
   onResize(): void
 }
 
@@ -260,8 +258,6 @@ export class Interaction {
 
   onMouseDown(_e: BoardPointerEvent) {}
 
-  onTouchStart(_e: BoardPointerEvent) {}
-
   onMouseUp(e: BoardPointerEvent) {
     const b = this.board
     if (b.options.readonly || e.button !== 0) {
@@ -316,8 +312,6 @@ export class Interaction {
       }
     }
   }
-
-  onTouchMove(_e: BoardPointerEvent) {}
 
   setReadonly(readonly: boolean) {
     const b = this.board
