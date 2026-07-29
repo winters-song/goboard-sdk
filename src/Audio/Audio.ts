@@ -20,7 +20,11 @@ interface IUserPlay {
   loop?: boolean
 }
 
-const WebAudioContext = window.AudioContext || window.webkitAudioContext
+const WebAudioContext =
+  typeof window !== 'undefined'
+    ? window.AudioContext ||
+      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    : undefined
 
 export default class Audio {
   static initialized = false
@@ -40,6 +44,9 @@ export default class Audio {
   private static context: AudioContext | null = null
 
   private static getContext() {
+    if (!WebAudioContext) {
+      throw new Error('[Audio] Web Audio API is not available in this environment')
+    }
     if (!this.context) {
       this.context = new WebAudioContext()
     }
@@ -58,6 +65,9 @@ export default class Audio {
   }
 
   static unlock() {
+    if (typeof document === 'undefined') {
+      return
+    }
     const unlockWebAudio = () => {
       const ctx = this.getContext()
       if (ctx.state !== 'running') {

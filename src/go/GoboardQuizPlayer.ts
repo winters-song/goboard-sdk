@@ -80,8 +80,8 @@ export default class GoboardQuizPlayer extends GoboardPlayer {
     if (stones && stones.length && this.boardSize > 9) {
       this.clipBoard(stones)
     } else {
-      this.cb.el.style.left = '0px'
-      this.cb.el.style.top = '0px'
+      this.cb!.el!.style.left = '0px'
+      this.cb!.el!.style.top = '0px'
     }
   }
 
@@ -123,7 +123,7 @@ export default class GoboardQuizPlayer extends GoboardPlayer {
    * 如何平移回中心位置？
    * */
   setViewBox(top, bottom, left, right) {
-    const cb = this.cb
+    const cb = this.cb as any
 
     // 当前棋谱取值范围（棋子+标记+答案）外扩路数
     const offset = 4

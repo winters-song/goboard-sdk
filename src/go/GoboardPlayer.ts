@@ -1,24 +1,26 @@
-import Goboard from './Goboard'
 import { Go, Color } from './Go'
 import { SgfMoveNode, SgfNode, SgfTree } from './SgfTree'
 import EventEmitter from 'events'
-import Audio from '../Audio/Audio'
+import type { BoardView, CreateBoardFactory } from './BoardView'
 
 let effectsReady: Promise<void> | null = null
 
 function ensureEffects() {
   if (!effectsReady) {
-    effectsReady = import('./boardSounds').then(({ SOUND_URLS }) => {
-      Audio.init()
-      Audio.loadEffects(SOUND_URLS)
-    })
+    effectsReady = Promise.all([import('./boardSounds'), import('../Audio/Audio')]).then(
+      ([{ SOUND_URLS }, { default: Audio }]) => {
+        Audio.init()
+        Audio.loadEffects(SOUND_URLS)
+      },
+    )
   }
   return effectsReady
 }
 
 /** 首次播放时再加载音效；未解码完则排队等加载后播放 */
 export function playBoardSound(name: string, volume = 0.2) {
-  void ensureEffects().then(() => {
+  void ensureEffects().then(async () => {
+    const { default: Audio } = await import('../Audio/Audio')
     Audio.playAsnyc({ name, volume })
   })
 }
@@ -30,6 +32,9 @@ export function playBoardSound(name: string, volume = 0.2) {
  *
  * */
 export default class GoboardPlayer extends EventEmitter {
+  /** Used by full `goboard-sdk` entry to default to Raphael Goboard. */
+  static defaultCreateBoardFactory?: CreateBoardFactory
+
   // 开启音效
   soundEnabled = true
   // 当前手数
@@ -47,7 +52,11 @@ export default class GoboardPlayer extends EventEmitter {
 
   el?: HTMLDivElement
 
-  cb?: Goboard
+  cb?: BoardView
+  /** When set, createBoard reuses this view instead of factory/destroy. */
+  externalBoard?: BoardView
+  createBoardFactory?: CreateBoardFactory
+
   go: any
   sgfTree: any
   root: any
@@ -64,6 +73,16 @@ export default class GoboardPlayer extends EventEmitter {
     super()
 
     Object.assign(this, cfg)
+    if (cfg?.board) {
+      this.setBoard(cfg.board)
+    }
+  }
+
+  /** Inject a headless / custom board (e.g. 3D adapter). */
+  setBoard(board: BoardView) {
+    this.externalBoard = board
+    this.cb = board
+    return this
   }
 
   // fullSgf: 带有答案的sgf, 用于正确裁剪棋盘（避免答案部分被裁剪掉）
@@ -144,7 +163,7 @@ export default class GoboardPlayer extends EventEmitter {
       this.onMove()
     })
 
-    this.cb.onUpdateHelperLine((col: number, row: number) => {
+    this.cb.onUpdateHelperLine?.((col: number, row: number) => {
       if (this.prePlayData) {
         this.prePlayData.node.col = col
         this.prePlayData.node.row = row
@@ -154,12 +173,12 @@ export default class GoboardPlayer extends EventEmitter {
     })
 
     // 课堂标记
-    this.cb.onMark(this.onMark)
+    this.cb.onMark?.(this.onMark)
   }
 
   onMark(mark: string, col: number, row: number) {
     // @ts-ignore
-    const cb: Goboard = this
+    const cb: BoardView = this
     const key = col + ',' + row
 
     if (!mark) {
@@ -253,10 +272,6 @@ export default class GoboardPlayer extends EventEmitter {
   }
 
   createBoard(boardOptions?: any) {
-    if (this.cb) {
-      this.cb.destroy()
-    }
-
     const cfg = {
       el: this.el,
       boardSize: this.boardSize,
@@ -271,7 +286,25 @@ export default class GoboardPlayer extends EventEmitter {
     }
     Object.assign(cfg, this.boardOptions, boardOptions)
 
-    this.cb = new Goboard(cfg)
+    if (this.externalBoard) {
+      this.cb = this.externalBoard
+      this.cb.clearBoard()
+      this.go = new Go(this.boardSize)
+      return
+    }
+
+    if (this.cb) {
+      this.cb.destroy?.()
+    }
+
+    const factory = this.createBoardFactory ?? GoboardPlayer.defaultCreateBoardFactory
+    if (!factory) {
+      throw new Error(
+        '[GoboardPlayer] No board. Call setBoard(board) or import from "goboard-sdk" (SVG default).',
+      )
+    }
+
+    this.cb = factory(cfg)
     this.cb.clearBoard()
 
     this.go = new Go(this.boardSize)
@@ -701,7 +734,7 @@ export default class GoboardPlayer extends EventEmitter {
   // }
   changeTheme(settings: any) {
     Object.assign(this.boardOptions, settings)
-    this.cb && this.cb.changeTheme(settings)
+    this.cb?.changeTheme?.(settings)
   }
 
   // 分屏课堂，教师发标记题，获取当前sgf
@@ -735,7 +768,7 @@ export default class GoboardPlayer extends EventEmitter {
     let markerString = ''
     for (const i in this.cb.markers) {
       const pos = i.split(',')
-      markerString += `[${SgfTree.toGnuCo(parseInt(pos[0]), parseInt(pos[1]))}:${this.cb.markers[i].attr('text')}]`
+      markerString += `[${SgfTree.toGnuCo(parseInt(pos[0]), parseInt(pos[1]))}:${this.cb.markers[i]?.attr?.('text') ?? this.cb.markers[i] ?? ''}]`
     }
     if (markerString) {
       traceSgf += 'LB' + markerString

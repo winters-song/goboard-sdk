@@ -1,4 +1,14 @@
-/** Headless core: rules + SGF only (no Raphael / Goboard view). */
+/** Headless core: rules, SGF, Players — no Raphael Goboard. */
 export { Go, Color, Str, mergeSet, removeSet } from './go/Go'
 export { SgfTree, SgfNode, SgfMoveNode, SgfProperty, AutoPlayStatus } from './go/SgfTree'
 export type { AutoPlayResult, AutoPlayStatusCode } from './go/SgfTree'
+export type { BoardView, CreateBoardFactory } from './go/BoardView'
+export type { BoardPoint, ShowOrderMode, StoneColor } from './go/goboard/types'
+export { default as GoboardPlayer, playBoardSound } from './go/GoboardPlayer'
+export { default as GoboardPlayerTiny } from './go/GoboardPlayerTiny'
+export { default as GoboardGamePlayer } from './go/GoboardGamePlayer'
+export { default as GoboardBranchPlayer } from './go/GoboardBranchPlayer'
+export { default as GoboardQuizPlayer } from './go/GoboardQuizPlayer'
+export { default as GoboardAnalysisPlayer } from './go/GoboardAnalysisPlayer'
+export { default as GoboardMultigoPlayer } from './go/GoboardMultigoPlayer'
+export type { IAiTopMoves, IAiTopMovesPoint } from './go/GoboardAnalysisPlayer'

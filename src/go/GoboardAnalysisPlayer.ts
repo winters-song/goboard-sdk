@@ -609,7 +609,7 @@ export default class GoboardAnalysisPlayer extends GoboardPlayer {
       const handleClick = (_e: unknown) => {
         console.log('index', index)
         // console.log('棋子坐标:', col, row);
-        // @ts-expect-error raphael runtime unclick API
+        // @ts-ignore raphael runtime unclick API
         this.cb?.pieces[key].unclick?.()
         this.enterAnalysisBranch(index)
       }
@@ -761,7 +761,7 @@ export default class GoboardAnalysisPlayer extends GoboardPlayer {
 
         if (this.isBestMove) {
           // 移除点击事件
-          // @ts-expect-error raphael runtime unclick API
+          // @ts-ignore raphael runtime unclick API
           this.cb.pieces[this.lastMasterKey]?.unclick()
         }
         this.lastMasterKey = ''
