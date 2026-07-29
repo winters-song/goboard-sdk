@@ -551,11 +551,6 @@ export class StoneLayer {
    */
   eat(vertexes: BoardPoint[]) {
     for (let i = 0; i < vertexes.length; i++) {
-      const piece = this.getPiece(vertexes[i].col, vertexes[i].row)
-      if (!piece) {
-        continue
-      }
-      piece.remove()
       const key = vertexes[i].col + ',' + vertexes[i].row
       this.removePiece(key)
     }
