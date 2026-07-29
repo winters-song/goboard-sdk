@@ -337,10 +337,6 @@ class Goboard {
     return this.interaction.onMouseDown(_e)
   }
 
-  onTouchStart(_e: BoardPointerEvent) {
-    return this.interaction.onTouchStart(_e)
-  }
-
   onMouseUp(e: BoardPointerEvent) {
     return this.interaction.onMouseUp(e)
   }
@@ -355,10 +351,6 @@ class Goboard {
 
   onMouseMove(e: BoardPointerEvent) {
     return this.interaction.onMouseMove(e)
-  }
-
-  onTouchMove(_e: BoardPointerEvent) {
-    return this.interaction.onTouchMove(_e)
   }
 
   setReadonly(readonly: boolean) {
